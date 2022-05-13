@@ -21,7 +21,7 @@ Please install packages from `requirements.txt` after creating your own environm
 
 ```bash
 $ pip install --upgrade pip
-$ pip install -r requirements.txt
+$ pip install -r requirements_fedweit.txt
 ```
 
 ## Data Generation
