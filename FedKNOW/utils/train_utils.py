@@ -11,6 +11,7 @@ from dataset.miniimagenet import MiniImageTask
 from dataset.fc100 import FC100Task
 from dataset.core50 import Core50Task
 from dataset.Tinyimagenet import TinyimageTask
+from models.LeNetWEIT import LeNetWEIT
 
 complex_data_transform = {
     "train": transforms.Compose([transforms.RandomResizedCrop(224),
@@ -33,7 +34,7 @@ easy_data_transform = {
 
 def get_data(args):
     if args.dataset == 'cifar100':
-        if args.model == '6layer_CNN':
+        if args.model == '6layer_CNN' or args.model == 'LeNet':
             data_transform = easy_data_transform
         else:
             data_transform = complex_data_transform
@@ -134,6 +135,14 @@ def get_model(args):
             net_glob = RepTail(image_size,output=args.num_classes,nc_per_task=args.num_classes // args.task).to(args.device)
         else:
             net_glob = Cifar100WEIT(image_size,n_ouputs=args.num_classes,nc_per_task=args.num_classes // args.task).to(args.device)
+    elif args.model == 'LeNet':
+        if 'cifar100' in args.dataset or 'FC100' in args.dataset or 'CORe50' in args.dataset:
+            image_size = [3,32,32]
+        else:
+            image_size = [3, 224, 224]
+        if(args.alg.lower() == 'weit'):
+            net_glob = LeNetWEIT(image_size,n_ouputs=args.num_classes,nc_per_task=args.num_classes // args.task).to(args.device)
+
     elif args.model == 'ResNet18' :
         net_glob = RepTailResNet18(output=args.num_classes,nc_per_task=args.num_classes // args.task).to(args.device)
     elif args.model == 'ResNet152' :
