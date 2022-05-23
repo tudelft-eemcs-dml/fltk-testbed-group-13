@@ -32,6 +32,7 @@ class LeNet(nn.Module):
         self.relu = torch.nn.ReLU()
         self.layer_keys = [['conv1'],['conv2'],['fc1'],['fc2'],['last']]
     def forward(self, x, t, avg_act=False):
+
         if x.size(1) !=3:
             bsz = x.size(0)
             x = x.view(bsz,3,32,32)
