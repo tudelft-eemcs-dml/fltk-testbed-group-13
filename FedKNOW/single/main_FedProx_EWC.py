@@ -10,7 +10,7 @@ from utils.options import args_parser
 from utils.train_utils import get_data, get_model, read_data
 from models.Update import DatasetSplit
 from models.test import test_img_local_all
-from single.ContinualLearningMethod.AGS import Appr,LongLifeTrain
+from FedKNOW.single.ContinualLearningMethod.ProxEWC import Appr,LongLifeTrain
 from torch.utils.data import DataLoader
 import time
 
@@ -26,9 +26,7 @@ if __name__ == '__main__':
             np.random.shuffle(dict_users_train[idx])
     else:
         print('Not this dataset!!')
-
-    print(args.alg)
-    write = SummaryWriter('./log/AGS_' + args.dataset + '_' + 'round' + str(args.round) + '_frac' + str(
+    write = SummaryWriter('./log/APFL_' + args.dataset + '_' + 'round' + str(args.round) + '_frac' + str(
         args.frac) + '_model_' + args.model)
     # build model
     # net_glob = get_model(args)
@@ -37,6 +35,8 @@ if __name__ == '__main__':
     total_num_layers = len(net_glob.state_dict().keys())
     print(net_glob.state_dict().keys())
     net_keys = [*net_glob.state_dict().keys()]
+
+    # specify the representation parameters (in w_glob_keys) and head parameters (all others)
     w_glob_keys = []
 
     # generate list of local models for each user
@@ -118,7 +118,7 @@ if __name__ == '__main__':
             acc_test, loss_test = test_img_local_all(net_glob, args, dataset_test, dict_users_test,task,
                                                      w_glob_keys=w_glob_keys, w_locals=None, indd=indd,
                                                      dataset_train=dataset_train, dict_users_train=dict_users_train,
-                                                     return_all=False,write=write)
+                                                     return_all=False,write=write,device=args.device)
             accs.append(acc_test)
             # for algs which learn a single global model, these are the local accuracies (computed using the locally updated versions of the global model at the end of each round)
             if iter != args.epochs:
@@ -130,17 +130,17 @@ if __name__ == '__main__':
                     loss_avg, loss_test, acc_test))
             if iter >= args.epochs - 10 and iter != args.epochs:
                 accs10 += acc_test / 10
+
             if iter >= args.epochs - 10 and iter != args.epochs:
                 accs10_glob += acc_test / 10
 
-    # print('Average accuracy final 10 rounds: {}'.format(accs10))
-    # if args.alg == 'fedavg' or args.alg == 'prox':
-    #     print('Average global accuracy final 10 rounds: {}'.format(accs10_glob))
+
     end = time.time()
     print(end - start)
     print(times)
     print(accs)
-    base_dir = './save/AGS/accs_AGS_lambda_' + str(args.lamb) + str( '_') + args.alg + '_' + args.dataset + '_' + str(args.num_users) + '_' + str(
+    base_dir = './save/GEM/accs_GEM_lambda_' + str(args.lamb) + str(
+        '_') + args.alg + '_' + args.dataset + '_' + str(args.num_users) + '_' + str(
         args.shard_per_user) + '_iterFinal' + '_frac_' + str(args.frac) + '_model_' + args.model + '.csv'
     user_save_path = base_dir
     accs = np.array(accs)
