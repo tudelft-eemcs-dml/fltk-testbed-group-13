@@ -10,7 +10,7 @@ from utils.options import args_parser
 from utils.train_utils import get_data, get_model, read_data
 from models.Update import DatasetSplit
 from models.test import test_img_local_all
-from single.ContinualLearningMethod.Prox_WEIT import Appr,LongLifeTrain
+from single.ContinualLearningMethod.ProxWEIT import Appr,LongLifeTrain
 from torch.utils.data import DataLoader
 import time
 
