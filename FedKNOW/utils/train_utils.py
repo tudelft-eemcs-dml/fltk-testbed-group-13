@@ -39,7 +39,7 @@ def get_data(args):
             data_transform = easy_data_transform
         else:
             data_transform = complex_data_transform
-        cifar100 = Cifar100Task('../data/cifar100',task_num=10,data_transform=data_transform)
+        cifar100 = Cifar100Task('data/cifar100',task_num=10,data_transform=data_transform)
         dataset_train,dataset_test = cifar100.getTaskDataSet()
         dict_users_train, rand_set_all = noniid(dataset_train[0], args.num_users, args.shard_per_user, args.num_classes // args.task)
         dict_users_test, rand_set_all = noniid(dataset_test[0], args.num_users, args.shard_per_user, args.num_classes // args.task, rand_set_all=rand_set_all)
@@ -139,12 +139,14 @@ def get_model(args):
     elif args.model == 'LeNet':
         if 'cifar100' in args.dataset or 'FC100' in args.dataset or 'CORe50' in args.dataset:
             image_size = [3,32,32]
-            net_glob = LeNet(image_size, n_outputs=args.num_classes, nc_per_task=args.num_classes // args.task).to(
-                args.device)
+
         else:
             image_size = [3, 224, 224]
         if(args.alg.lower() == 'weit'):
             net_glob = LeNetWEIT(image_size,n_ouputs=args.num_classes,nc_per_task=args.num_classes // args.task).to(args.device)
+        else:
+            net_glob = LeNet(image_size, n_outputs=args.num_classes, nc_per_task=args.num_classes // args.task).to(args.device)
+
 
     elif args.model == 'ResNet18' :
         net_glob = RepTailResNet18(output=args.num_classes,nc_per_task=args.num_classes // args.task).to(args.device)

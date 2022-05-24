@@ -25,7 +25,7 @@ def compute_offsets(task, nc_per_task, is_cifar=True):
 def fisher_matrix_diag(t,dataloader, model):
     # Init
     fisher = {}
-    for n, p in model.feature_net.named_parameters():
+    for n, p in model.named_parameters():
         fisher[n] = 0 * p.data
     # Compute
     model.train()
@@ -42,12 +42,12 @@ def fisher_matrix_diag(t,dataloader, model):
         loss = criterion(outputs, target)
         loss.backward()
         # Get gradients
-        for n, p in model.feature_net.named_parameters():
+        for n, p in model.named_parameters():
             if p.grad is not None:
                 fisher[n] += images.shape[0] * p.grad.data.pow(2)
     # Mean
     with torch.no_grad():
-        for n, _ in model.feature_net.named_parameters():
+        for n, _ in model.named_parameters():
             fisher[n] = fisher[n] / all_num
     return fisher
 def overwrite_grad(pp, newgrad, grad_dims):
@@ -142,11 +142,11 @@ class Appr(object):
         self.ce = torch.nn.CrossEntropyLoss()
         self.optimizer = self._get_optimizer()
         self.lamb = args.lamb
-        self.e_rep = args.local_rep_ep
+        self.e_rep = args.local_ep
         self.num_classes = args.num_classes // args.task
         self.old_task=-1
         self.grad_dims = []
-        for param in self.model.feature_net.parameters():
+        for param in self.model.parameters():
             self.grad_dims.append(param.data.numel())
 
         return
@@ -187,12 +187,12 @@ class Appr(object):
         # Fisher ops
         fisher_old = {}
         if t>0:
-            for n, _ in self.model.feature_net.named_parameters():
+            for n, _ in self.model.named_parameters():
                 fisher_old[n] = self.fisher[n].clone()
         self.fisher = fisher_matrix_diag(t,self.tr_dataloader, self.model)
         if t > 0:
             # Watch out! We do not want to keep t models (or fisher diagonals) in memory, therefore we have to merge fisher diagonals
-            for n, _ in self.model.feature_net.named_parameters():
+            for n, _ in self.model.named_parameters():
                 self.fisher[n] = (self.fisher[n] + fisher_old[n] * t) / (
                         t + 1)  # Checked: it is better than the other option
 
@@ -245,7 +245,7 @@ class Appr(object):
         # Regularization for all previous tasks
         loss_reg = 0
         if t > 0:
-            for (name, param), (_, param_old) in zip(self.model.feature_net.named_parameters(), self.model_old.feature_net.named_parameters()):
+            for (name, param), (_, param_old) in zip(self.model.named_parameters(), self.model_old.named_parameters()):
                 loss_reg += torch.sum(self.fisher[name] * (param_old - param).pow(2)) / 2
         return self.ce(output, targets) + self.lamb * loss_reg
 

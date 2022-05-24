@@ -10,7 +10,7 @@ from utils.options import args_parser
 from utils.train_utils import get_data, get_model, read_data
 from models.Update import DatasetSplit
 from models.test import test_img_local_all
-from single.ContinualLearningMethod.baseline import Appr,LongLifeTrain
+from single.ContinualLearningMethod.Prox import Appr,LongLifeTrain
 from torch.utils.data import DataLoader
 import time
 
@@ -139,7 +139,7 @@ if __name__ == '__main__':
     print(end - start)
     print(times)
     print(accs)
-    base_dir = 'single/save/Prox/accs_Prox_lambda_' + str(args.lamb) + str(
+    base_dir = './save/GEM/accs_GEM_lambda_' + str(args.lamb) + str(
         '_') + args.alg + '_' + args.dataset + '_' + str(args.num_users) + '_' + str(
         args.shard_per_user) + '_iterFinal' + '_frac_' + str(args.frac) + '_model_' + args.model + '.csv'
     user_save_path = base_dir
