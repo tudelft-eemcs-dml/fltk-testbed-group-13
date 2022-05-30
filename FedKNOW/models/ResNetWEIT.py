@@ -1,6 +1,6 @@
 from torch import nn
 import torch
-from models.layer import DecomposedConv,DecomposedLinear
+from FedKNOW.models.layer import DecomposedConv,DecomposedLinear
 def conv1x1(in_planes, out_planes, stride=1):
     """1x1 convolution"""
     return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)

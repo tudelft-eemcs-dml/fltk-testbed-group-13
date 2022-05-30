@@ -2,17 +2,17 @@
 # credit goes to: Paul Pu Liang
 
 from torchvision import datasets, transforms
-from models.Nets import RepTailInception_v3,RepTailResNet18,RepTailResNet152,RepTailWideResNet,RepTailResNext,RepTailMobilenet,RepTailshufflenet,RepTail,RepTailSENet,RepTailDensnet,Cifar100WEIT
-from utils.sampling import noniid
+from FedKNOW.models.Nets import RepTailInception_v3,RepTailResNet18,RepTailResNet152,RepTailWideResNet,RepTailResNext,RepTailMobilenet,RepTailshufflenet,RepTail,RepTailSENet,RepTailDensnet,Cifar100WEIT
+from FedKNOW.utils.sampling import noniid
 import os
 import json
-from dataset.Cifar100 import Cifar100Task
-from dataset.miniimagenet import MiniImageTask
-from dataset.fc100 import FC100Task
-from dataset.core50 import Core50Task
-from dataset.Tinyimagenet import TinyimageTask
-from models.LeNetWEIT import LeNetWEIT
-from models.LeNet import LeNet
+from FedKNOW.dataset.Cifar100 import Cifar100Task
+from FedKNOW.dataset.miniimagenet import MiniImageTask
+from FedKNOW.dataset.fc100 import FC100Task
+from FedKNOW.dataset.core50 import Core50Task
+from FedKNOW.dataset.Tinyimagenet import TinyimageTask
+from FedKNOW.models.LeNetWEIT import LeNetWEIT
+from FedKNOW.models.LeNet import LeNet
 
 complex_data_transform = {
     "train": transforms.Compose([transforms.RandomResizedCrop(224),

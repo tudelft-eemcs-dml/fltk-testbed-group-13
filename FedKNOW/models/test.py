@@ -12,7 +12,7 @@ from torch import nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 import time
-from models.language_utils import get_word_emb_arr, repackage_hidden, process_x, process_y
+from FedKNOW.models.language_utils import get_word_emb_arr, repackage_hidden, process_x, process_y
 from copy import deepcopy
 class DatasetSplit(Dataset):
     def __init__(self, dataset, idxs):

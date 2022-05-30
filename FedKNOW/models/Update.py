@@ -15,7 +15,7 @@ import time
 import copy
 import FedProx
 
-from models.language_utils import get_word_emb_arr, repackage_hidden, process_x, process_y 
+from FedKNOW.models.language_utils import get_word_emb_arr, repackage_hidden, process_x, process_y
 from torchvision import transforms
 class DatasetSplit(Dataset):
     def __init__(self, dataset, idxs, name=None):

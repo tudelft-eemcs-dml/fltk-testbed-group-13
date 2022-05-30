@@ -6,12 +6,12 @@ import torch
 from torch import nn
 from torch.utils.tensorboard import SummaryWriter
 
-from utils.options import args_parser
-from utils.train_utils import get_data, get_model, read_data
-from models.Update import DatasetSplit
-from models.test import test_img_local_all, test_img_local_all_WEIT
-from single.ContinualLearningMethod.WEIT import Appr,LongLifeTrain
-from models.Nets import WEITResNet
+from FedKNOW.utils.options import args_parser
+from FedKNOW.utils.train_utils import get_data, get_model, read_data
+from FedKNOW.models.Update import DatasetSplit
+from FedKNOW.models.test import test_img_local_all, test_img_local_all_WEIT
+from FedKNOW.single.ContinualLearningMethod.WEIT import Appr,LongLifeTrain
+from FedKNOW.models.Nets import WEITResNet
 from torch.utils.data import DataLoader
 import time
 
@@ -91,7 +91,6 @@ if __name__ == '__main__':
                 apprs[i].model.set_knowledge(task,from_kb)
 
         for ind, idx in enumerate(idxs_users):
-            glob_fisher = None
             start_in = time.time()
             tr_dataloaders = DataLoader(DatasetSplit(dataset_train[task],dict_users_train[idx][:args.m_ft]),batch_size=args.local_bs, shuffle=True)
             w_local = []

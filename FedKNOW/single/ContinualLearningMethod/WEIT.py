@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from copy import deepcopy
 from tqdm import tqdm
-from utils import *
+from FedKNOW.utils import *
 from torch.utils.tensorboard import SummaryWriter
 import quadprog
 sys.path.append('..')

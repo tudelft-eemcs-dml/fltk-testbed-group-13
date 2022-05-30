@@ -7,7 +7,7 @@ import os.path
 import numpy as np
 import pickle
 from typing import Any, Callable, Optional, Tuple
-from models.inception_v3 import inception_v3
+from FedKNOW.models.inception_v3 import inception_v3
 from torch.utils.data import DataLoader
 from torchvision.datasets.utils import check_integrity, download_and_extract_archive
 

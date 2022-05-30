@@ -1,7 +1,7 @@
 import torch
 from torch import nn
-from models.layer import DecomposedConv,DecomposedLinear
-from models.Nets import compute_conv_output_size
+from FedKNOW.models.layer import DecomposedConv,DecomposedLinear
+from FedKNOW.models.Nets import compute_conv_output_size
 
 
 class LeNet(nn.Module):

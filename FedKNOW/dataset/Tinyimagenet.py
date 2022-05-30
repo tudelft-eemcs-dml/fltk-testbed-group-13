@@ -6,7 +6,7 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
-from models.Nets import RepTail
+from FedKNOW.models.Nets import RepTail
 import cv2
 import numpy as np
 class TinyimageTask():

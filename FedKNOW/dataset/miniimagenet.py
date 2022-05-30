@@ -5,7 +5,7 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 from torchvision import transforms, models
-from models.Nets import RepTail
+from FedKNOW.models.Nets import RepTail
 class MiniImageTask():
     def __init__(self,root,json_path,task_num=1,data_transform=None):
         self.root = root

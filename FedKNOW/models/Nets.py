@@ -10,16 +10,16 @@ from torch import nn
 import torch.nn.functional as F
 from torch.nn import Parameter
 from torchvision import models
-from models.ResNet import resnet18,wide_resnet50_2,resnext50_32x4d,resnet152
-from models.ResNetWEIT import resnetWEIT18
+from FedKNOW.models.ResNet import resnet18,wide_resnet50_2,resnext50_32x4d,resnet152
+from FedKNOW.models.ResNetWEIT import resnetWEIT18
 import json
 import numpy as np
-from models.mobilenet import mobilenet_v2
-from models.language_utils import get_word_emb_arr
-from models.layer import DecomposedConv,DecomposedLinear
-from models.inception_v3 import inception_v3
-from models.shufflenetv2 import shufflenet_v2_x0_5
-from models.Densenet import DenseNet
+from FedKNOW.models.mobilenet import mobilenet_v2
+from FedKNOW.models.language_utils import get_word_emb_arr
+from FedKNOW.models.layer import DecomposedConv,DecomposedLinear
+from FedKNOW.models.inception_v3 import inception_v3
+from FedKNOW.models.shufflenetv2 import shufflenet_v2_x0_5
+from FedKNOW.models.Densenet import DenseNet
 def compute_conv_output_size(Lin, kernel_size, stride=1, padding=0, dilation=1):
     return int(np.floor((Lin + 2 * padding - dilation * (kernel_size - 1) - 1) / float(stride) + 1))
 class RepTailSENet(nn.Module):

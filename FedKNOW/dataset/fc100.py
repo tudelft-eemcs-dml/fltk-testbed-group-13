@@ -5,7 +5,7 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
-from models.Nets import RepTail
+from FedKNOW.models.Nets import RepTail
 class FC100Task():
     def __init__(self,root,task_num=1,data_transform =None):
         self.root = root
