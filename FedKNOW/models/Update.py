@@ -13,7 +13,6 @@ import math
 import numpy as np
 import time
 import copy
-import FedProx
 
 from FedKNOW.models.language_utils import get_word_emb_arr, repackage_hidden, process_x, process_y
 from torchvision import transforms

@@ -279,7 +279,7 @@ class testmodel(torch.nn.Module):
         return out
 
 def main():
-    task = Cifar100Task('../data/cifar100',task_num=10)
+    task = Cifar100Task('FedKNOW/data/cifar100',task_num=10)
     train, test = task.getTaskDataSet()
     train_dataset = train[0]
     val_dataset = test[0]

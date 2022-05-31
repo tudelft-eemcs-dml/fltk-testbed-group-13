@@ -61,7 +61,8 @@ if __name__ == '__main__':
     accs10_glob = 0
     start = time.time()
     task=-1
-    apprs = [Appr(copy.deepcopy(net_glob).cuda(), None,lr=args.lr, nepochs=args.local_ep, args=args) for i in range(args.num_users)]
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    apprs = [Appr(copy.deepcopy(net_glob).to(device), None,lr=args.lr, nepochs=args.local_ep, args=args) for i in range(args.num_users)]
     print(args.round , "rounds in total")
     from_kb =[]
 

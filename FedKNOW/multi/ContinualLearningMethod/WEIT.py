@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from copy import deepcopy
 from tqdm import tqdm
-from utils import *
+from FedKNOW.utils import *
 from torch.utils.tensorboard import SummaryWriter
 import quadprog
 sys.path.append('..')
@@ -34,9 +34,10 @@ def fisher_matrix_diag(t,dataloader, model):
     criterion = torch.nn.CrossEntropyLoss()
     offset1, offset2 = compute_offsets(t, 10)
     all_num = 0
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     for images,target in dataloader:
-        images = images.cuda()
-        target = (target - 10 * t).cuda()
+        images = images.to(device)
+        target = (target - 10 * t).to(device)
         all_num += images.shape[0]
         # Forward and backward
         model.zero_grad()
@@ -153,6 +154,7 @@ class Appr(object):
             'aw':[],
             'mask':[]
         }
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         return
     def set_sw(self,glob_weights):
@@ -199,7 +201,7 @@ class Appr(object):
             para.requires_grad = True
         self.model.set_knowledge(t,from_kbs)
         self.optimizer = self._get_optimizer(lr)
-        self.model.cuda()
+        self.model.to(self.device)
         # Loop epochs
         for e in range(self.nepochs):
             # Train
@@ -241,8 +243,8 @@ class Appr(object):
     def train_epoch(self,t):
         self.model.train()
         for images,targets in self.tr_dataloader:
-            images = images.cuda()
-            targets = (targets - self.num_classes * t).cuda()
+            images = images.to(self.device)
+            targets = (targets - self.num_classes * t).to(self.device)
             # Forward current model
             offset1, offset2 = compute_offsets(t, self.num_classes)
             self.optimizer.zero_grad()
@@ -312,8 +314,8 @@ class Appr(object):
         # Loop batches
         with torch.no_grad():
             for images,targets in dataloaders:
-                images = images.cuda()
-                targets = (targets - self.num_classes*t).cuda()
+                images = images.to(self.device)
+                targets = (targets - self.num_classes*t).to(self.device)
                 # Forward
                 offset1, offset2 = compute_offsets(t, self.num_classes)
                 output = self.model.forward(images,t)[:,offset1:offset2]
@@ -370,9 +372,10 @@ def LongLifeTest(args, appr, t, testdatas, aggNum, writer):
     lss = np.zeros((1, t), dtype=np.float32)
     t = aggNum // args.round
     r = aggNum % args.round
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     for u in range(t + 1):
-        xtest = testdatas[u][0].cuda()
-        ytest = (testdatas[u][1] - u * 10).cuda()
+        xtest = testdatas[u][0].to(device)
+        ytest = (testdatas[u][1] - u * 10).to(device)
         test_loss, test_acc = appr.eval(u, xtest, ytest)
         print('>>> Test on task {:2d} : loss={:.3f}, acc={:5.1f}% <<<'.format(u, test_loss,
                                                                               100 * test_acc))

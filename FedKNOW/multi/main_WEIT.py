@@ -1,13 +1,13 @@
 import copy
 import numpy as np
 import torch
-from utils.options import args_parser
-from utils.train_utils import get_data, get_model
-from models.Update import DatasetSplit
-from multi.ContinualLearningMethod.WEIT import Appr,LongLifeTest,LongLifeTrain
+from FedKNOW.utils.options import args_parser
+from FedKNOW.utils.train_utils import get_data, get_model
+from FedKNOW.models.Update import DatasetSplit
+from FedKNOW.multi.ContinualLearningMethod.WEIT import Appr,LongLifeTest,LongLifeTrain
 from torch.utils.data import DataLoader
 import time
-from models.Packnet import PackNet
+from FedKNOW.models.Packnet import PackNet
 import flwr as fl
 from collections import OrderedDict
 import datetime
