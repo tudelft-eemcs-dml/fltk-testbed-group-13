@@ -12,9 +12,6 @@ WORKDIR /app
 # update pip
 RUN pip3 install --upgrade pip
 
-# making sure the latest version of flower is installed
-RUN pip3 install flwr==0.16.0
-
 ADD docker/requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
 # Scripts needed for Flower client
