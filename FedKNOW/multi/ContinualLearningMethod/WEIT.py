@@ -146,7 +146,9 @@ class Appr(object):
         self.ce = torch.nn.CrossEntropyLoss()
         self.optimizer = self._get_optimizer()
         self.lamb = args.lamb
-        self.e_rep = args.local_rep_ep
+        self.e_rep = args.local_ep
+        self.traindataloaders= []
+        self.testdataloaders = []
         self.old_task=-1
         self.grad_dims = []
         self.pre_weight = {
