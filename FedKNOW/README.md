@@ -45,15 +45,33 @@ py -m single.main_FedProx --alg=prox --dataset=cifar100 --num_classes=100 --mode
 
 To run a flower client:
 1. cd into the FedKNOW directory
-2. Run the following command to build a docker image
+2. Run the following command to build a docker image (Linux)
 
 ```
 ./build_image.sh
 ```
-
-3. Run the docker image with:
-
+3. For Windows, you can build the image using:
 ```
-docker run flower_client {args for client go here}
+docker build -t flower_client:latest . -f docker/Dockerfile
 ```
+4. Then you need to start the Flower server and the client as mentioned below.
+## For a simpler and relatively quicker run (Syntax may vary between OSes for py/python/python3):
 
+To create the server
+```
+py -m multi.server --num_users 5 --frac 1.0 --ip 127.0.0.1:8000 --epochs 20
+```
+Then open 5 terminals and create a client as shown below (--ip arg will change when running on a real cluster). Set the client id appropriately.
+```
+docker run flower_client --alg=WEIT --dataset=cifar100 --num_classes=100 --model=LeNet --num_users=5 --round 2 --shard_per_user=5 --frac=1.0 --local_bs=40 --optim=Adam --lr=0.001 --lr_decay=1e-4 --task=10 --epoch=20  --local_ep=2  --gpu=0 --client_id <SOME_ID> --ip host.docker.internal:8000
+```
+## For reproducing the paper's experimental settings with Overlapped CIFAR-100
+
+To create the server
+```
+py -m multi.server --num_users 5 --frac 1.0 --ip 127.0.0.1:8000 --epochs 200
+```
+To spawn the clients
+```
+docker run flower_client --alg=WEIT --dataset=cifar100 --num_classes=100 --model=LeNet --num_users=5 --round 20 --shard_per_user=5 --frac=1.0 --local_bs=40 --optim=Adam --lr=0.001 --lr_decay=1e-4 --task=10 --epoch=200  --local_ep=2  --gpu=0 --client_id <SOME_ID> --ip host.docker.internal:8000
+```
