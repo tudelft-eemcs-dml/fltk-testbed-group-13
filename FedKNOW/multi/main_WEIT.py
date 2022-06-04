@@ -9,6 +9,17 @@ from torch.utils.data import DataLoader
 import time
 from FedKNOW.models.Packnet import PackNet
 import flwr as fl
+from flwr.common import (
+    EvaluateIns,
+    EvaluateRes,
+    FitIns,
+    FitRes,
+    Parameters,
+    Scalar,
+    Weights,
+    parameters_to_weights,
+    weights_to_parameters,
+)
 from collections import OrderedDict
 import datetime
 class FPKDClient(fl.client.NumPyClient):
@@ -18,36 +29,48 @@ class FPKDClient(fl.client.NumPyClient):
         self.curTask = 0
     def get_parameters(self):
         net = appr.get_sw()
-        return [val.cpu().numpy() for _, val in net.state_dict().items()]
+        return [val.detach().cpu().numpy() for val in net]
 
     def set_parameters(self, parameters):
-        net = appr.get_sw()
-        params_dict = zip(net.state_dict().keys(), parameters)
-        state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
-        net.load_state_dict(state_dict, strict=True)
+        # print(len(parameters))
+        # print("the last element on that list is",parameters.pop())
+        net = appr.set_sw(parameters)
+        return net
+        # print(parameters,"olalalalala")
+        # exit(0)
+        # params_dict = zip(net.state_dict().keys(), parameters)
+        # state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
+        # net.load_state_dict(state_dict, strict=True)
 
     def fit(self, parameters, config):
         train_round = config['round']
-
         begintime = datetime.datetime.now()
         print('cur round{} begin training ,time is {}'.format(train_round,time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())))
         self.set_parameters(parameters)
-        loss, totalnum = LongLifeTrain(self.args,appr,train_round,None,args.client_id)
+        w_local, aws,loss, indd = LongLifeTrain(self.args,appr,train_round-1,from_kb,args.client_id)
+
+
         endtime =time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
         print('cur round {} end training ,time is {}'.format(train_round, endtime))
-        return self.get_parameters(), totalnum, {}
+        return self.get_parameters(), indd, {}
 
     def evaluate(self, parameters, config):
         print('eval:')
         print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
         test_round = config['round']
         self.set_parameters(parameters)
-        loss, accuracy,totalnum = LongLifeTest(args, appr, test_round)
+        loss, accuracy,totalnum = LongLifeTest(args, appr, test_round-1)
         print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
         return float(accuracy), totalnum, {"accuracy": float(accuracy)}
+
+
 if __name__ == '__main__':
     # parse args
     args = args_parser()
+    args.wd = 1e-4
+    args.lambda_l1 = 1e-3
+    args.lambda_l2 = 1
+    args.lambda_mask = 0
     args.device = torch.device('cuda:{}'.format(args.gpu) if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
 
     lens = np.ones(args.num_users)
@@ -79,6 +102,13 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # appr = Appr(copy.deepcopy(net_glob),PackNet(args.task,local_ep=args.local_ep,local_rep_ep=args.local_rep_ep,device=args.device),copy.deepcopy(net_glob), None,lr=args.lr, nepochs=args.local_ep, args=args)
     appr = Appr(copy.deepcopy(net_glob).to(device), None,lr=args.lr, nepochs=args.local_ep, args=args)
+    from_kb =[]
+    for name,para in net_glob.named_parameters():
+        if 'aw' in name:
+            shape = np.concatenate([para.shape, [int(round(args.num_users * args.frac))]], axis=0)
+            from_kb_l = np.zeros(shape)
+            from_kb_l = torch.from_numpy(from_kb_l)
+            from_kb.append(from_kb_l)
     for i in range(args.task):
         tr_dataloaders = DataLoader(DatasetSplit(dataset_train[i], dict_users_train[args.client_id]),
                                     batch_size=args.local_bs, shuffle=True, num_workers=0)

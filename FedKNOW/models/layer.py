@@ -68,7 +68,6 @@ class DecomposedConv(nn.Module):
         else:
             self.register_parameter('bias', None)
         self.reset_parameters()
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     def reset_parameters(self) -> None:
         init.kaiming_uniform_(self.sw, a=math.sqrt(5))
@@ -92,14 +91,19 @@ class DecomposedConv(nn.Module):
             self.atten = Parameter(torch.rand(dim))
     def set_knlwledge(self,from_kb):
         self.from_kb = from_kb
-        self.from_kb.to(self.device)
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.from_kb.to(device)
     def get_weight(self):
         m = nn.Sigmoid()
         sw = self.sw.transpose(0, -1)
         # newmask = m(self.mask)
         # print(sw*newmask)
-        weight = (sw * m(self.mask)).transpose(0, -1) + self.aw + torch.sum(self.atten * (self.from_kb.to(self.device)), dim=-1)
-        weight = weight.type(torch.cuda.FloatTensor)
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        weight = (sw * m(self.mask)).transpose(0, -1) + self.aw + torch.sum(self.atten * (self.from_kb.to(device)), dim=-1)
+        if(device.type != 'cpu'):
+            weight = weight.type(torch.cuda.FloatTensor)
+        else:
+            weight = weight.type(torch.FloatTensor)
         return weight
     def forward(self, input):
 
@@ -145,8 +149,12 @@ class DecomposedLinear(nn.Module):
         sw = self.sw.transpose(0, -1)
         # newmask = m(self.mask)
         # print(sw*newmask)
-        weight = (sw * m(self.mask)).transpose(0, -1) + self.aw + torch.sum(self.atten * self.from_kb.to(self.device), dim=-1)
-        weight = weight.type(torch.cuda.FloatTensor)
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        weight = (sw * m(self.mask)).transpose(0, -1) + self.aw + torch.sum(self.atten * self.from_kb.to(device), dim=-1)
+        if(device.type != 'cpu'):
+            weight = weight.type(torch.cuda.FloatTensor)
+        else:
+            weight = weight.type(torch.FloatTensor)
         return weight
     def forward(self, input):
         weight = self.get_weight()

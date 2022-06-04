@@ -1,4 +1,11 @@
 import flwr as fl
+from typing import Callable, Dict, List, Optional, Tuple, Union
+from flwr.common.logger import log
+from flwr.server.client_manager import ClientManager
+from flwr.server.client_proxy import ClientProxy
+from flwr.server.strategy.aggregate import aggregate
+import numpy as np
+
 from flwr.common import (
     EvaluateIns,
     EvaluateRes,
@@ -45,7 +52,15 @@ class OurFed(fl.server.strategy.FedAvg):
             # Custom fit config function provided
             config = self.on_fit_config_fn(rnd)
         config['round'] = rnd
+
+        existing_weights = parameters_to_weights(parameters)
+        existing_weights.append(['Hello from the other side'])
+        new_params = weights_to_parameters(existing_weights)
+        #print(len(parameters_to_weights(new_params)))
+        #config['kb'] = [1,2,3,4]
+        #config['kb'] = [1,2,3,4]
         fit_ins = FitIns(parameters, config)
+        # fit_ins = FitIns(new_params,config)
 
         # Sample clients
         sample_size, min_num_clients = self.num_fit_clients(
@@ -88,3 +103,36 @@ class OurFed(fl.server.strategy.FedAvg):
 
         # Return client/config pairs
         return [(client, evaluate_ins) for client in clients]
+
+    def aggregate_fit(
+        self,
+        rnd: int,
+        results: List[Tuple[ClientProxy, FitRes]],
+        failures: List[BaseException],
+    ) -> Tuple[Optional[Parameters], Dict[str, Scalar]]:
+        """Aggregate fit results using weighted average."""
+        if not results:
+            return None, {}
+        # Do not aggregate if there are failures and failures are not accepted
+        if not self.accept_failures and failures:
+            return None, {}
+
+        # Convert results
+        weights_results = [
+            (parameters_to_weights(fit_res.parameters), fit_res.num_examples)
+            for _, fit_res in results
+        ]
+        parameters_aggregated = weights_to_parameters(aggregate(weights_results))
+        # print("--the length of data is---- ")
+        # for _,fit_res in results:
+        #     print(fit_res.num_examples)
+
+        # Aggregate custom metrics if aggregation fn was provided
+        metrics_aggregated = {}
+        # if self.fit_metrics_aggregation_fn:
+        #     fit_metrics = [(res.num_examples, res.metrics) for _, res in results]
+        #     metrics_aggregated = self.fit_metrics_aggregation_fn(fit_metrics)
+        # elif rnd == 1:  # Only log this warning once
+        #     log(WARNING, "No fit_metrics_aggregation_fn provided")
+
+        return parameters_aggregated, metrics_aggregated

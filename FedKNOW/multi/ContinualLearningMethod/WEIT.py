@@ -166,7 +166,7 @@ class Appr(object):
             all_weights = []
             for name,para in self.model.named_parameters():
                 if 'sw' in name:
-                    all_weights.append(glob_weights[i])
+                    all_weights.append(torch.Tensor(glob_weights[i]))
                     i=i+1
                 else:
                     all_weights.append(para)
@@ -176,8 +176,8 @@ class Appr(object):
             save_model = OrderedDict({k: v for k, v in feature_dict})
             state_dict = {k:v for k,v in save_model.items() if k in model_dict.keys()}
             model_dict.update(state_dict)
-            self.model.load_state_dict(model_dict)
-        print()
+            return self.model.load_state_dict(model_dict)
+
     def get_sw(self):
         sws = []
         for name,para in self.model.named_parameters():
@@ -207,7 +207,7 @@ class Appr(object):
         # Loop epochs
         for e in range(self.nepochs):
             # Train
-            self.train_epoch(t)
+            length = self.train_epoch(t)
             train_loss, train_acc = self.eval(t)
             if e % self.e_rep == self.e_rep -1:
                 print('| Epoch {:3d} | Train: loss={:.3f}, acc={:5.1f}% | \n'.format(
@@ -240,11 +240,12 @@ class Appr(object):
                     self.pre_weight['mask'][-1].append(para)
             self.pre_weight['weight'][-1] = self.model.get_weights()
 
-        return self.get_sw(),train_loss, train_acc
+        return self.get_sw(),train_loss, train_acc, length
 
     def train_epoch(self,t):
         self.model.train()
-        for images,targets in self.tr_dataloader:
+        length = len(self.traindataloaders[t])
+        for images,targets in self.traindataloaders[t]:
             images = images.to(self.device)
             targets = (targets - self.num_classes * t).to(self.device)
             # Forward current model
@@ -261,7 +262,7 @@ class Appr(object):
             loss.backward()
             self.optimizer.step()
 
-        return
+        return length
     def l2_loss(self,para):
         return torch.sum(torch.pow(para,2))/2
     def get_loss(self,outputs,targets,t):
@@ -311,7 +312,10 @@ class Appr(object):
         total_acc = 0
         total_num = 0
         self.model.eval()
-        dataloaders = self.tr_dataloader
+        if(train):
+            dataloaders = self.traindataloaders[t]
+        else:
+            dataloaders = self.testdataloaders[t]
 
         # Loop batches
         with torch.no_grad():
@@ -362,23 +366,20 @@ def LongLifeTrain(args, appr, aggNum, from_kbs,idx):
     task = t
 
     # Train
-    sws,loss,_ = appr.train(task,from_kbs,know)
+    sws,loss,_,len_data = appr.train(task,from_kbs,know)
     print('-' * 100)
     if know:
-        return sws,appr.pre_weight['aw'][-1],loss,0
+        return sws,appr.pre_weight['aw'][-1],loss,len_data
     else:
-        return sws, None, loss, 0
+        return sws, None, loss, len_data
 
-def LongLifeTest(args, appr, t, testdatas, aggNum, writer):
-    acc = np.zeros((1, t), dtype=np.float32)
-    lss = np.zeros((1, t), dtype=np.float32)
+def LongLifeTest(args, appr, aggNum):
     t = aggNum // args.round
     r = aggNum % args.round
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    acc = np.zeros((1, t+1), dtype=np.float32)
+    lss = np.zeros((1, t+1), dtype=np.float32)
     for u in range(t + 1):
-        xtest = testdatas[u][0].to(device)
-        ytest = (testdatas[u][1] - u * 10).to(device)
-        test_loss, test_acc = appr.eval(u, xtest, ytest)
+        test_loss, test_acc = appr.eval(u,train=False)
         print('>>> Test on task {:2d} : loss={:.3f}, acc={:5.1f}% <<<'.format(u, test_loss,
                                                                               100 * test_acc))
         acc[0, u] = test_acc
@@ -388,11 +389,10 @@ def LongLifeTest(args, appr, t, testdatas, aggNum, writer):
     mean_lss = np.mean(lss[0, :t])
     print('Average accuracy={:5.1f}%'.format(100 * np.mean(acc[0, :t+1])))
     print('Average loss={:5.1f}'.format(np.mean(lss[0, :t+1])))
-    print('Save at ' + args.output)
-    if r == args.round - 1:
-        writer.add_scalar('task_finish_and _agg', mean_acc, t + 1)
+    # if r == args.round - 1:
+    #     writer.add_scalar('task_finish_and _agg', mean_acc, t + 1)
     # np.savetxt(args.agg_output + 'aggNum_already_'+str(aggNum)+args.log_name, acc, '%.4f')
-    return mean_lss, mean_acc
+    return mean_lss, mean_acc,100
 
 # def main():
 #     # cifar100 = Cifar100Task('../data',batch_size=900,num_clients=5,cur_client=4,task_num=10,isFed=True)
