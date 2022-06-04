@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader
 import time
 from FedKNOW.models.Packnet import PackNet
 import flwr as fl
+import pickle
 from flwr.common import (
     EvaluateIns,
     EvaluateRes,
@@ -22,6 +23,9 @@ from flwr.common import (
 )
 from collections import OrderedDict
 import datetime
+
+from_kb = []
+
 class FPKDClient(fl.client.NumPyClient):
     def __init__(self,appr,args):
         self.appr= appr
@@ -43,16 +47,35 @@ class FPKDClient(fl.client.NumPyClient):
         # net.load_state_dict(state_dict, strict=True)
 
     def fit(self, parameters, config):
+        global from_kb
         train_round = config['round']
+        if(config['kb'] != ""):
+            from_kb = pickle.loads(config['kb'])
         begintime = datetime.datetime.now()
         print('cur round{} begin training ,time is {}'.format(train_round,time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())))
         self.set_parameters(parameters)
         w_local, aws,loss, indd = LongLifeTrain(self.args,appr,train_round-1,from_kb,args.client_id)
-
-
+        kb_str = ""
+        if (train_round-1) % args.round == args.round -1:
+            from_kb_l = []
+            ind = args.client_id
+            for aw in aws:
+                from_kb_l.append(aw.cpu().detach().numpy())
+                #shape = np.concatenate([aw.shape, [int(round(args.num_users * args.frac))]], axis=0)
+            kb_str = pickle.dumps(from_kb_l)
+                #from_kb_l = np.zeros(shape)
+                #if len(shape) == 5:
+                    #from_kb_l[:, :, :, :, ind] = aw.cpu().detach().numpy()
+                #else:
+                    #from_kb_l[:, :, ind] = aw.cpu().detach().numpy()
+                #from_kb_l = torch.from_numpy(from_kb_l)
+                #from_kb.append(from_kb_l)
+        params = self.get_parameters()
+        #new_params = parameters_to_weights(params)
         endtime =time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
         print('cur round {} end training ,time is {}'.format(train_round, endtime))
-        return self.get_parameters(), indd, {}
+        return params, indd, {'kb':kb_str}
+        #return self.get_parameters(), indd, {}
 
     def evaluate(self, parameters, config):
         print('eval:')
@@ -102,7 +125,6 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # appr = Appr(copy.deepcopy(net_glob),PackNet(args.task,local_ep=args.local_ep,local_rep_ep=args.local_rep_ep,device=args.device),copy.deepcopy(net_glob), None,lr=args.lr, nepochs=args.local_ep, args=args)
     appr = Appr(copy.deepcopy(net_glob).to(device), None,lr=args.lr, nepochs=args.local_ep, args=args)
-    from_kb =[]
     for name,para in net_glob.named_parameters():
         if 'aw' in name:
             shape = np.concatenate([para.shape, [int(round(args.num_users * args.frac))]], axis=0)

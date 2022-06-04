@@ -5,6 +5,7 @@ from flwr.server.client_manager import ClientManager
 from flwr.server.client_proxy import ClientProxy
 from flwr.server.strategy.aggregate import aggregate
 import numpy as np
+import pickle
 
 from flwr.common import (
     EvaluateIns,
@@ -43,6 +44,7 @@ class OurFed(fl.server.strategy.FedAvg):
             accept_failures=accept_failures,
             initial_parameters=initial_parameters
         )
+        self.kb = []
     def configure_fit(
         self, rnd: int, parameters: Parameters, client_manager
     ) :
@@ -53,15 +55,21 @@ class OurFed(fl.server.strategy.FedAvg):
             config = self.on_fit_config_fn(rnd)
         config['round'] = rnd
 
-        existing_weights = parameters_to_weights(parameters)
-        existing_weights.append(['Hello from the other side'])
-        new_params = weights_to_parameters(existing_weights)
-        #print(len(parameters_to_weights(new_params)))
-        #config['kb'] = [1,2,3,4]
-        #config['kb'] = [1,2,3,4]
-        fit_ins = FitIns(parameters, config)
-        # fit_ins = FitIns(new_params,config)
+        print("round is now",rnd)
+        kb_converted = []
+        if(len(self.kb) > 0):
+            for tensor in range(len(self.kb[0])):
+                internal = []
+                for client in range(len(self.kb)):
+                    internal.append(self.kb[client][tensor])
+                kb_converted.append(np.stack(internal,axis=-1))
+            kb_converted_string = pickle.dumps(kb_converted)
+            self.kb = []
 
+        kb_converted_string = ""
+        config['kb'] = kb_converted_string
+
+        fit_ins = FitIns(parameters, config)
         # Sample clients
         sample_size, min_num_clients = self.num_fit_clients(
             client_manager.num_available()
@@ -117,16 +125,21 @@ class OurFed(fl.server.strategy.FedAvg):
         if not self.accept_failures and failures:
             return None, {}
 
-        # Convert results
+
+
         weights_results = [
             (parameters_to_weights(fit_res.parameters), fit_res.num_examples)
             for _, fit_res in results
         ]
+
         parameters_aggregated = weights_to_parameters(aggregate(weights_results))
         # print("--the length of data is---- ")
-        # for _,fit_res in results:
-        #     print(fit_res.num_examples)
+        kb = []
+        for _,fitres in results:
+            if (fitres.metrics['kb'] != ""):
+                kb.append(pickle.loads(fitres.metrics['kb']))
 
+        self.kb = kb
         # Aggregate custom metrics if aggregation fn was provided
         metrics_aggregated = {}
         # if self.fit_metrics_aggregation_fn:
