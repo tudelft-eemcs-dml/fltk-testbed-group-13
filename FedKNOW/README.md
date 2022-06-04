@@ -55,7 +55,7 @@ To run a flower client:
 docker build -t flower_client:latest . -f docker/Dockerfile
 ```
 4. Then you need to start the Flower server and the client as mentioned below.
-## For a simpler and relatively quicker run (Syntax may vary between OSes for py/python/python3):
+## For a simpler and relatively quicker run:
 
 To create the server
 ```
