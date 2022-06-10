@@ -136,7 +136,8 @@ class OurFed(fl.server.strategy.FedAvg):
         kb = []
         for client,fitres in results:
             print(client.cid)
-            print('kb' in fitres.metrics)
+            if not 'kb' in fitres.metrics:
+                print(fitres)
         for _,fitres in results:
             if (fitres.metrics['kb'] != ""):
                 kb.append(pickle.loads(fitres.metrics['kb']))
