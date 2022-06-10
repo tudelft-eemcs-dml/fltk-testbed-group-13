@@ -134,9 +134,9 @@ class OurFed(fl.server.strategy.FedAvg):
         parameters_aggregated = weights_to_parameters(aggregate(weights_results))
         # print("--the length of data is---- ")
         kb = []
-        for _,fitres in results:
-            print("client result:")
-            print(fitres)
+        for client,fitres in results:
+            print(client.cid)
+            print('kb' in fitres.metrics)
         for _,fitres in results:
             if (fitres.metrics['kb'] != ""):
                 kb.append(pickle.loads(fitres.metrics['kb']))
