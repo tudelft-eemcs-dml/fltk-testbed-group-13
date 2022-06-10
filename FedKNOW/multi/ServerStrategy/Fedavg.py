@@ -136,6 +136,9 @@ class OurFed(fl.server.strategy.FedAvg):
         # print("--the length of data is---- ")
         kb = []
         for _,fitres in results:
+            print("client result:")
+            print(fitres)
+        for _,fitres in results:
             if (fitres.metrics['kb'] != ""):
                 kb.append(pickle.loads(fitres.metrics['kb']))
 
