@@ -57,6 +57,7 @@ class OurFed(fl.server.strategy.FedAvg):
 
         print("round is now",rnd)
         kb_converted = []
+        kb_converted_string = ""
         if(len(self.kb) > 0):
             for tensor in range(len(self.kb[0])):
                 internal = []
@@ -65,8 +66,6 @@ class OurFed(fl.server.strategy.FedAvg):
                 kb_converted.append(np.stack(internal,axis=-1))
             kb_converted_string = pickle.dumps(kb_converted)
             self.kb = []
-
-        kb_converted_string = ""
         config['kb'] = kb_converted_string
 
         fit_ins = FitIns(parameters, config)
