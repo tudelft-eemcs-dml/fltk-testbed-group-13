@@ -59,6 +59,7 @@ class OurFed(fl.server.strategy.FedAvg):
         kb_converted = []
         kb_converted_string = ""
         if(len(self.kb) > 0):
+            print("len kb greater than 0")
             for tensor in range(len(self.kb[0])):
                 internal = []
                 for client in range(len(self.kb)):
@@ -138,8 +139,9 @@ class OurFed(fl.server.strategy.FedAvg):
             print(client.cid)
             if not 'kb' in fitres.metrics:
                 print(failures)
-        for _,fitres in results:
+        for client,fitres in results:
             if (fitres.metrics['kb'] != ""):
+                print("kb not empty in client: {}".format(client.cid))
                 kb.append(pickle.loads(fitres.metrics['kb']))
 
         self.kb = kb

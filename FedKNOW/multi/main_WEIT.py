@@ -51,6 +51,9 @@ class FPKDClient(fl.client.NumPyClient):
         train_round = config['round']
         if(config['kb'] != ""):
             from_kb = pickle.loads(config['kb'])
+            print("from_kb loaded form server")
+        else:
+            print("using default value for kb")
         begintime = datetime.datetime.now()
         print('cur round{} begin training ,time is {}'.format(train_round,time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())))
         self.set_parameters(parameters)
@@ -74,6 +77,7 @@ class FPKDClient(fl.client.NumPyClient):
         #new_params = parameters_to_weights(params)
         endtime =time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
         print('cur round {} end training ,time is {}'.format(train_round, endtime))
+        print(kb_str)
         return params, indd, {'kb':kb_str}
         #return self.get_parameters(), indd, {}
 
