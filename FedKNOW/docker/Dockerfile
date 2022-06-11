@@ -23,5 +23,6 @@ ADD dataset /app/FedKNOW/dataset
 ADD models /app/FedKNOW/models
 ADD test.py /app/FedKNOW
 
+RUN sed -i '/.*("grpc.max_receive_message_length", max_message_length),/a \            ("grpc.enable_http_proxy", 0),' /usr/local/lib/python3.8/site-packages/flwr/client/grpc_client/connection.py
 
 ENTRYPOINT ["python3","-m","FedKNOW.multi.main_WEIT"]
