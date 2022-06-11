@@ -50,10 +50,7 @@ class FPKDClient(fl.client.NumPyClient):
         global from_kb
         train_round = config['round']
         if(config['kb'] != ""):
-            from_kb = pickle.loads(config['kb'])
-            print(from_kb)
-            print(type(from_kb))
-            print(type(from_kb[0]))
+            from_kb = list(map(lambda x: torch.from_numpy(x), pickle.loads(config['kb'])))
         else:
             print("using default value for kb")
         begintime = datetime.datetime.now()
