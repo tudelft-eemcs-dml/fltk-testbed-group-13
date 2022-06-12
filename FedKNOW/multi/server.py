@@ -1,6 +1,6 @@
 import flwr as fl
-from multi.ServerStrategy.Fedavg import OurFed
-from utils.options import args_parser
+from FedKNOW.multi.ServerStrategy.Fedavg import OurFed
+from FedKNOW.utils.options import args_parser
 args = args_parser()
 strategy = OurFed(
     min_fit_clients=int(args.num_users * args.frac),
