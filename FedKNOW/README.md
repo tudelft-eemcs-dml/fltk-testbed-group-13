@@ -76,9 +76,10 @@ To spawn the clients
 docker run flower_client --alg=WEIT --dataset=cifar100 --num_classes=100 --model=LeNet --num_users=5 --round 20 --shard_per_user=5 --frac=1.0 --local_bs=40 --optim=Adam --lr=0.001 --lr_decay=1e-4 --task=10 --epoch=200  --local_ep=2  --gpu=0 --client_id <SOME_ID> --ip host.docker.internal:8000
 ```
 
-To spawn a client on google cloud run  
+To do a true distributed setup, the clients can be deployed to google cloud run as a job
+To spawn a job on google cloud run  
 ```
-gcloud run deploy flowerclient0 --image=gcr.io/{PROJECT_NAME}/flower_client --region=us-central1 --allow-unauthenticated  \
+gcloud beta run jobs create flowerclient"$i" --image=gcr.io/{project-name}/flower_client --region=us-central1   \
   --args="--alg=WEIT" \
   --args="--dataset=cifar100" \
   --args="--num_classes=100" \
@@ -94,7 +95,13 @@ gcloud run deploy flowerclient0 --image=gcr.io/{PROJECT_NAME}/flower_client --re
   --args="--epoch=20" \
   --args="--local_ep=2" \
   --args="--gpu=0" \
-  --args="--client_id=0" \
-  --args="--ip=34.90.96.210:8000"
-  --memory 4096Mi
+  --args="--client_id=$i" \
+  --args="--ip={server-ip}" \
+  --memory 4096Mi \
+  --task-timeout 50m
+```
+
+To run the job on google cloud run 
+```
+gcloud beta run jobs execute flowerclient"$i" --region=us-central1
 ```
