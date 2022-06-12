@@ -48,18 +48,18 @@ To run a flower client:
 2. Run the following command to build a docker image (Linux)
 
 ```
-./build_image.sh
+./FedKNOW/build_image.sh
 ```
 3. For Windows, you can build the image using:
 ```
-docker build -t flower_client:latest . -f docker/Dockerfile
+docker build -t flower_client:latest . -f FedKNOW/docker/Dockerfile
 ```
 4. Then you need to start the Flower server and the client as mentioned below.
 ## For a simpler and relatively quicker run:
 
-To create the server
+To create the server (from root dir)
 ```
-py -m multi.server --num_users 5 --frac 1.0 --ip 127.0.0.1:8000 --epochs 20
+py -m FedKNOW.multi.server --num_users 5 --frac 1.0 --ip 127.0.0.1:8000 --epochs 20
 ```
 Then open 5 terminals and create a client as shown below (--ip arg will change when running on a real cluster). Set the client id appropriately.
 ```
@@ -108,5 +108,5 @@ gcloud beta run jobs execute flowerclient"$i" --region=us-central1
 
 You can also deploy multiple clients using the preexisting script:
 ```
-./scripts/cloudrun.sh {number_of_clients_to_run}
+./scripts/cloudrun.sh {number_of_clients_to_run} {compression_algo}
 ```
