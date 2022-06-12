@@ -3,7 +3,7 @@ COMPRESSION=$2
 IND=$((CLIENTS-1))
 for i in $(seq 0 $IND);
 do
-  gcloud beta run jobs create flowerclient"$COMPRESSION""$i" --image=gcr.io/festive-freedom-351515/flower_client --region=us-central1   \
+  gcloud beta run jobs create flowerclient"$COMPRESSION""$i" --image=gcr.io/festive-freedom-351515/flower_client_vanilla --region=us-central1   \
   --args="--alg=WEIT" \
   --args="--dataset=cifar100" \
   --args="--num_classes=100" \
