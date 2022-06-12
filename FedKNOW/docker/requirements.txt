@@ -3,7 +3,6 @@ cachetools==4.2.4
 certifi==2022.5.18.1
 charset-normalizer==2.0.12
 colorama==0.4.4
-flwr==0.16.0
 google-auth==2.6.6
 google-auth-oauthlib==0.4.6
 grpcio==1.46.1

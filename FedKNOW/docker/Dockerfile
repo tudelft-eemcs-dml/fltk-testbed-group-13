@@ -15,6 +15,7 @@ RUN pip3 install --upgrade pip
 ADD docker/requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
 # Scripts needed for Flower client
+ADD ../flwr /app/flwr
 ADD multi /app/FedKNOW/multi
 ADD utils /app/FedKNOW/utils
 ADD scripts /app/FedKNOW/scripts
