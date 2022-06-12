@@ -1,4 +1,5 @@
 import copy
+import blosc
 import numpy as np
 import torch
 from FedKNOW.utils.options import args_parser
@@ -53,7 +54,7 @@ class FPKDClient(fl.client.NumPyClient):
         global from_kb
         train_round = config['round']
         if(config['kb'] != ""):
-            from_kb = list(map(lambda x: torch.from_numpy(x), pickle.loads(config['kb'])))
+            from_kb = list(map(lambda x: torch.from_numpy(blosc.decompress(x)), pickle.loads(config['kb'])))
         begintime = datetime.datetime.now()
         print('cur round{} begin training ,time is {}'.format(train_round,time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())))
         self.set_parameters(parameters)

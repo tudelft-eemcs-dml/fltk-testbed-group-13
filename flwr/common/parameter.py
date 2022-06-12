@@ -38,7 +38,7 @@ def parameters_to_weights(parameters: Parameters) -> Weights:
 def ndarray_to_bytes(ndarray: np.ndarray) -> bytes:
     """Serialize NumPy ndarray to bytes."""
     bytes_io = BytesIO()
-    np.save(bytes_io, ndarray, allow_pickle=True)
+    np.save(bytes_io, ndarray, allow_pickle=False)
     compressed = blosc.compress(bytes_io.getvalue())
     return compressed
 
@@ -47,5 +47,5 @@ def bytes_to_ndarray(tensor: bytes) -> np.ndarray:
     """Deserialize NumPy ndarray from bytes."""
     decompressed = blosc.decompress(tensor)
     bytes_io = BytesIO(decompressed)
-    ndarray_deserialized = np.load(bytes_io, allow_pickle=True)
+    ndarray_deserialized = np.load(bytes_io, allow_pickle=False)
     return cast(np.ndarray, ndarray_deserialized)
