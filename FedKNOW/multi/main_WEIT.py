@@ -23,6 +23,8 @@ from flwr.common import (
 )
 from collections import OrderedDict
 import datetime
+import time
+import sys
 
 from_kb = []
 
@@ -47,6 +49,7 @@ class FPKDClient(fl.client.NumPyClient):
         # net.load_state_dict(state_dict, strict=True)
 
     def fit(self, parameters, config):
+        start = time.time()
         global from_kb
         train_round = config['round']
         if(config['kb'] != ""):
@@ -54,7 +57,7 @@ class FPKDClient(fl.client.NumPyClient):
         begintime = datetime.datetime.now()
         print('cur round{} begin training ,time is {}'.format(train_round,time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())))
         self.set_parameters(parameters)
-        w_local, aws,loss, indd = LongLifeTrain(self.args,appr,train_round-1,from_kb,args.client_id)
+        w_local, aws,loss, indd, acc = LongLifeTrain(self.args,appr,train_round-1,from_kb,args.client_id)
         kb_str = ""
         if (train_round-1) % args.round == args.round -1:
             from_kb_l = []
@@ -74,7 +77,11 @@ class FPKDClient(fl.client.NumPyClient):
         #new_params = parameters_to_weights(params)
         endtime =time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
         print('cur round {} end training ,time is {}'.format(train_round, endtime))
-        return params, indd, {'kb':kb_str}
+        end = time.time()
+        clientExecTime = end - start
+        paramSize = sum([x.nbytes for x in params])
+        kbSize = sys.getsizeof(kb_str)
+        return params, indd, {'kb':kb_str,'clientExecTime':clientExecTime, 'parameter_size':paramSize, 'kb_size':kbSize, 'train_acc': acc}
         #return self.get_parameters(), indd, {}
 
     def evaluate(self, parameters, config):
@@ -84,7 +91,7 @@ class FPKDClient(fl.client.NumPyClient):
         self.set_parameters(parameters)
         loss, accuracy,totalnum = LongLifeTest(args, appr, test_round-1)
         print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
-        return float(accuracy), totalnum, {"accuracy": float(accuracy)}
+        return float(loss), totalnum, {"accuracy": float(accuracy)}
 
 
 if __name__ == '__main__':

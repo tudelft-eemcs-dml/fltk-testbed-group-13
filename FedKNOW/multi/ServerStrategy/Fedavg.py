@@ -3,9 +3,13 @@ from typing import Callable, Dict, List, Optional, Tuple, Union
 from flwr.common.logger import log
 from flwr.server.client_manager import ClientManager
 from flwr.server.client_proxy import ClientProxy
-from flwr.server.strategy.aggregate import aggregate
+from flwr.server.strategy.aggregate import aggregate, weighted_loss_avg
 import numpy as np
 import pickle
+import time
+import sys
+import pandas as pd
+import csv
 
 from flwr.common import (
     EvaluateIns,
@@ -45,15 +49,34 @@ class OurFed(fl.server.strategy.FedAvg):
             initial_parameters=initial_parameters
         )
         self.kb = []
+        self.totTimeStart = 0.0
+        self.totTimeEnd = 0.0
+        self.serverCompTime = []
+        self.totalTime = []
+        self.totalCommTime = []
+        self.avgOneWayCommTime = []
+        self.clientCompTime = []
+        self.serverToClientCommSize = []
+        self.clientToServerCommSize = []
+        self.training_acc = []
+        self.test_acc = []
+        myheaders = ['round','total-time','server-time','client-time','total-comm-time','avg-one-way-comm-time','server-to-client-comm-size','client-to-server-comm-size','training-acc','test-acc']
+        self.filename = 'experiment.csv'
+        with open(self.filename, 'w', newline='') as myfile:
+            writer = csv.writer(myfile)
+            writer.writerow(myheaders)
     def configure_fit(
         self, rnd: int, parameters: Parameters, client_manager
     ) :
         """Configure the next round of training."""
+        start = time.time()
+        self.totTimeStart = start
         config = {}
         if self.on_fit_config_fn is not None:
             # Custom fit config function provided
             config = self.on_fit_config_fn(rnd)
         config['round'] = rnd
+
 
         print("round is now",rnd)
         kb_converted = []
@@ -76,7 +99,15 @@ class OurFed(fl.server.strategy.FedAvg):
         clients = client_manager.sample(
             num_clients=sample_size, min_num_clients=min_num_clients
         )
-
+        end = time.time()
+        self.serverCompTime.append(end - start)
+        weights = parameters_to_weights(parameters)
+        paramSize = sum([x.nbytes for x in weights])
+        configSize = sys.getsizeof(config['kb'])
+        self.serverToClientCommSize.append(paramSize + configSize)
+        # print("Server side compute time prior to sending parameters:",end - start)
+        # print("size of parameters being sent to client:", paramSize)
+        # print("size of knowledge base sent to the client:", configSize)
         # Return client/config pairs
         return [(client, fit_ins) for client in clients]
 
@@ -117,6 +148,7 @@ class OurFed(fl.server.strategy.FedAvg):
         results: List[Tuple[ClientProxy, FitRes]],
         failures: List[BaseException],
     ) -> Tuple[Optional[Parameters], Dict[str, Scalar]]:
+        start = time.time()
         """Aggregate fit results using weighted average."""
         if not results:
             return None, {}
@@ -134,17 +166,88 @@ class OurFed(fl.server.strategy.FedAvg):
         parameters_aggregated = weights_to_parameters(aggregate(weights_results))
         # print("--the length of data is---- ")
         kb = []
+        avg_client_exec_time = 0.0
+        avg_client_parameter_size = 0.0
+        avg_client_config_size = 0.0
+        avg_client_training_accuracy = 0.0
+        num_clients = 0
         for _,fitres in results:
             if (fitres.metrics['kb'] != ""):
                 kb.append(pickle.loads(fitres.metrics['kb']))
+            avg_client_parameter_size += fitres.metrics['parameter_size']
+            avg_client_config_size += fitres.metrics['kb_size']
+            avg_client_exec_time += fitres.metrics['clientExecTime']
+            avg_client_training_accuracy += fitres.metrics['train_acc']
+            num_clients += 1
 
         self.kb = kb
         # Aggregate custom metrics if aggregation fn was provided
+        end = time.time()
+        self.totTimeEnd = end
+        self.totalTime.append(self.totTimeEnd - self.totTimeStart)
+        self.serverCompTime[-1] += end - start #add the overhead from the aggregation phase too
+        self.clientCompTime.append(avg_client_exec_time/num_clients)
+        self.totalCommTime.append(self.totalTime[-1] - self.serverCompTime[-1] - self.clientCompTime[-1])
+        self.avgOneWayCommTime.append(self.totalCommTime[-1]/2)
+        self.clientToServerCommSize.append(avg_client_parameter_size/num_clients + avg_client_config_size/num_clients)
+        self.training_acc.append(avg_client_training_accuracy/num_clients)
+        # print("server side execution time:", self.serverCompTime[-1])
+        # print("average client-side execution time:", avg_client_exec_time/num_clients)
+        # print("average parameter size of clients:", avg_client_parameter_size/num_clients)
+        # print("average knowledge base size of clients:", avg_client_config_size/num_clients)
+        # print("total execution time for round:", self.totTimeEnd - self.totTimeStart)
+        # print("total communication time between the clients and server:", self.totalCommTime[-1])
         metrics_aggregated = {}
-        # if self.fit_metrics_aggregation_fn:
-        #     fit_metrics = [(res.num_examples, res.metrics) for _, res in results]
-        #     metrics_aggregated = self.fit_metrics_aggregation_fn(fit_metrics)
-        # elif rnd == 1:  # Only log this warning once
-        #     log(WARNING, "No fit_metrics_aggregation_fn provided")
-
         return parameters_aggregated, metrics_aggregated
+
+    def aggregate_evaluate(
+        self,
+        rnd: int,
+        results: List[Tuple[ClientProxy, EvaluateRes]],
+        failures: List[BaseException],
+    ) -> Tuple[Optional[float], Dict[str, Scalar]]:
+        """Aggregate evaluation losses using weighted average."""
+        if not results:
+            return None, {}
+        # Do not aggregate if there are failures and failures are not accepted
+        if not self.accept_failures and failures:
+            return None, {}
+        loss_aggregated = weighted_loss_avg(
+            [
+                (
+                    evaluate_res.num_examples,
+                    evaluate_res.loss,
+                    evaluate_res.accuracy,
+                )
+                for _, evaluate_res in results
+            ]
+        )
+        avg_accuracy = 0.0
+        tot_num_examples = 0
+        for _, evaluate_res in results:
+            avg_accuracy += evaluate_res.num_examples * evaluate_res.metrics['accuracy']
+            tot_num_examples += evaluate_res.num_examples
+        print("Avg accuracy of clients after round "+str(rnd)+" is: {:.2f}".format(avg_accuracy/tot_num_examples))
+        self.test_acc.append(avg_accuracy/tot_num_examples)
+            #avg_accuracy += evaluate_res.num_examples * evaluate_res.accuracy
+        self.write_data_to_file(rnd)
+        return loss_aggregated, {}
+
+    def write_data_to_file(self, rnd):
+        row = []
+        if(rnd != -1):
+            row.append(rnd)
+            row.append(self.totalTime[-1])
+            row.append(self.serverCompTime[-1])
+            row.append(self.clientCompTime[-1])
+            row.append(self.totalCommTime[-1])
+            row.append(self.avgOneWayCommTime[-1])
+            row.append(self.serverToClientCommSize[-1])
+            row.append(self.clientToServerCommSize[-1])
+            row.append(self.training_acc[-1])
+            row.append(self.test_acc[-1])
+            with open(self.filename, 'a', newline='') as myfile:
+                writer = csv.writer(myfile)
+                writer.writerow(row)
+        else:
+            pass
