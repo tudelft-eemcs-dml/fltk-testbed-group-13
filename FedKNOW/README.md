@@ -105,3 +105,8 @@ To run the job on google cloud run
 ```
 gcloud beta run jobs execute flowerclient"$i" --region=us-central1
 ```
+
+You can also deploy multiple clients using the preexisting script:
+```
+./scripts/cloudrun.sh {number_of_clients_to_run}
+```
