@@ -22,7 +22,7 @@ service FlowerService {
 }
 
 message Parameters {
-  repeated bytes tensors = 1;
+  string tensors = 1;
   string tensor_type = 2;
 }
 enum Reason {
