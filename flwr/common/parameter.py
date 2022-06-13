@@ -18,8 +18,7 @@
 from io import BytesIO
 from typing import cast
 
-#import blosc
-import gzip
+import zlib
 import numpy as np
 
 from .typing import Parameters, Weights
@@ -40,13 +39,13 @@ def ndarray_to_bytes(ndarray: np.ndarray) -> bytes:
     """Serialize NumPy ndarray to bytes."""
     bytes_io = BytesIO()
     np.save(bytes_io, ndarray, allow_pickle=False)
-    compressed = gzip.compress(bytes_io.getvalue())
+    compressed = zlib.compress(bytes_io.getvalue())
     return compressed
 
 
 def bytes_to_ndarray(tensor: bytes) -> np.ndarray:
     """Deserialize NumPy ndarray from bytes."""
-    decompressed = gzip.decompress(tensor)
+    decompressed = zlib.decompress(tensor)
     bytes_io = BytesIO(decompressed)
     ndarray_deserialized = np.load(bytes_io, allow_pickle=False)
     return cast(np.ndarray, ndarray_deserialized)

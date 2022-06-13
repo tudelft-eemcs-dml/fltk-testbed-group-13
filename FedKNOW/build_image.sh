@@ -5,5 +5,5 @@ if [ -z "${CI}" ]; then
 else
     BUILDKIT=0
 fi
-cd ..
+
 DOCKER_BUILDKIT=${BUILDKIT} docker build -t flower_client:latest . -f FedKNOW/docker/Dockerfile

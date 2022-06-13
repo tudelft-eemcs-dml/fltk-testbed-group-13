@@ -1,5 +1,4 @@
 import copy
-import blosc
 import numpy as np
 import torch
 from FedKNOW.utils.options import args_parser
@@ -26,7 +25,7 @@ from collections import OrderedDict
 import datetime
 import time
 import sys
-import gzip
+import zlib
 
 from_kb = []
 
@@ -55,7 +54,7 @@ class FPKDClient(fl.client.NumPyClient):
         global from_kb
         train_round = config['round']
         if(config['kb'] != ""):
-            from_kb = list(map(lambda x: torch.from_numpy(x), pickle.loads(gzip.decompress(config['kb']))))
+            from_kb = list(map(lambda x: torch.from_numpy(x), pickle.loads(zlib.decompress(config['kb']))))
         begintime = datetime.datetime.now()
         print('cur round{} begin training ,time is {}'.format(train_round,time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())))
         self.set_parameters(parameters)
@@ -68,7 +67,7 @@ class FPKDClient(fl.client.NumPyClient):
                 from_kb_l.append(aw.cpu().detach().numpy())
                 #shape = np.concatenate([aw.shape, [int(round(args.num_users * args.frac))]], axis=0)
             kb_str = pickle.dumps(from_kb_l)
-            kb_str = gzip.compress(kb_str)
+            kb_str = zlib.compress(kb_str)
                 #from_kb_l = np.zeros(shape)
                 #if len(shape) == 5:
                     #from_kb_l[:, :, :, :, ind] = aw.cpu().detach().numpy()
@@ -77,7 +76,7 @@ class FPKDClient(fl.client.NumPyClient):
                 #from_kb_l = torch.from_numpy(from_kb_l)
                 #from_kb.append(from_kb_l)
         params = self.get_parameters() #No need to compress this is automatically done
-        params_copy = weights_to_parameters(params) #to compress it using gzip
+        params_copy = weights_to_parameters(params) #to compress it using zlib
         #new_params = parameters_to_weights(params)
         endtime =time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
         print('cur round {} end training ,time is {}'.format(train_round, endtime))

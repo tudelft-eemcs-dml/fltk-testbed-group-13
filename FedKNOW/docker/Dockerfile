@@ -6,7 +6,7 @@ RUN apt-get install wget ffmpeg libsm6 libxext6  -y
 
 ENV DATA_DIR=/app/FedKNOW/data
 RUN mkdir -p $DATA_DIR
-ADD data DATA_DIR
+ADD FedKNOW/data DATA_DIR
 
 WORKDIR /app
 # update pip
