@@ -13,12 +13,11 @@
 # limitations under the License.
 # ==============================================================================
 """Parameter conversion."""
-
-
+import gzip
+import pickle
 from io import BytesIO
 from typing import cast
 
-import blosc
 import numpy as np
 
 from .typing import Parameters, Weights
@@ -26,26 +25,27 @@ from .typing import Parameters, Weights
 
 def weights_to_parameters(weights: Weights) -> Parameters:
     """Convert NumPy weights to parameters object."""
-    tensors = [ndarray_to_bytes(ndarray) for ndarray in weights]
-    return Parameters(tensors=tensors, tensor_type="numpy.ndarray")
+    tensors = pickle.dumps([ndarray_to_bytes(ndarray) for ndarray in weights])
+    compressed_tensors = gzip.compress(tensors)
+    return Parameters(tensors=list(), tensor_type=compressed_tensors)
 
 
 def parameters_to_weights(parameters: Parameters) -> Weights:
     """Convert parameters object to NumPy weights."""
-    return [bytes_to_ndarray(tensor) for tensor in parameters.tensors]
+    decompressed_tensors = gzip.decompress(parameters.tensor_type)
+    tensors = pickle.loads(decompressed_tensors)
+    return [bytes_to_ndarray(tensor) for tensor in tensors]
 
 
 def ndarray_to_bytes(ndarray: np.ndarray) -> bytes:
     """Serialize NumPy ndarray to bytes."""
     bytes_io = BytesIO()
     np.save(bytes_io, ndarray, allow_pickle=False)
-    compressed = blosc.compress(bytes_io.getvalue())
-    return compressed
+    return bytes_io.getvalue()
 
 
 def bytes_to_ndarray(tensor: bytes) -> np.ndarray:
     """Deserialize NumPy ndarray from bytes."""
-    decompressed = blosc.decompress(tensor)
-    bytes_io = BytesIO(decompressed)
+    bytes_io = BytesIO(tensor)
     ndarray_deserialized = np.load(bytes_io, allow_pickle=False)
     return cast(np.ndarray, ndarray_deserialized)
