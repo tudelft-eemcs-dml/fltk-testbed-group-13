@@ -1,3 +1,5 @@
+import blosc
+
 import flwr as fl
 from typing import Callable, Dict, List, Optional, Tuple, Union
 from flwr.common.logger import log
@@ -87,7 +89,7 @@ class OurFed(fl.server.strategy.FedAvg):
                 for client in range(len(self.kb)):
                     internal.append(self.kb[client][tensor])
                 kb_converted.append(np.stack(internal,axis=-1))
-            kb_converted_string = pickle.dumps(kb_converted)
+            kb_converted_string = blosc.compress(pickle.dumps(kb_converted))
             self.kb = []
         config['kb'] = kb_converted_string
 
@@ -172,7 +174,7 @@ class OurFed(fl.server.strategy.FedAvg):
         num_clients = 0
         for _,fitres in results:
             if (fitres.metrics['kb'] != ""):
-                kb.append(pickle.loads(fitres.metrics['kb']))
+                kb.append(pickle.loads(blosc.decompress(fitres.metrics['kb'])))
             avg_client_parameter_size += fitres.metrics['parameter_size']
             avg_client_config_size += fitres.metrics['kb_size']
             avg_client_exec_time += fitres.metrics['clientExecTime']
