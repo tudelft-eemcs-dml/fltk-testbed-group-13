@@ -2,7 +2,7 @@ CLIENTS=$1
 IND=$((CLIENTS-1))
 for i in $(seq 0 $IND);
 do
-  gcloud beta run jobs create flowerclient"$i" --image=gcr.io/festive-freedom-351515/flower_client --region=us-central1   \
+  gcloud beta run jobs create flowerclientexp"$i" --image=gcr.io/festive-freedom-351515/flower_client_experimental_gzip --region=europe-west4   \
   --args="--alg=WEIT" \
   --args="--dataset=cifar100" \
   --args="--num_classes=100" \
@@ -22,5 +22,5 @@ do
   --args="--ip=34.90.96.210:8000" \
   --memory 4096Mi \
   --task-timeout 50m
-  gcloud beta run jobs execute flowerclient"$i" --region=us-central1
+  gcloud beta run jobs execute flowerclientexp"$i" --region=europe-west4
 done

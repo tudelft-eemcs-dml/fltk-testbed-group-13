@@ -37,8 +37,7 @@ def parameters_to_proto(parameters: typing.Parameters) -> Parameters:
 
 def parameters_from_proto(msg: Parameters) -> typing.Parameters:
     """."""
-    tensors: List[bytes] = list(msg.tensors)
-    return typing.Parameters(tensors=tensors, tensor_type=msg.tensor_type)
+    return typing.Parameters(tensors=msg.tensors, tensor_type=msg.tensor_type)
 
 
 #  === Reconnect message ===
