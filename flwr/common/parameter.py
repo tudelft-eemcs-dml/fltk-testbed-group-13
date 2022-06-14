@@ -13,8 +13,8 @@
 # limitations under the License.
 # ==============================================================================
 """Parameter conversion."""
-
-
+import gzip
+import pickle
 from io import BytesIO
 from typing import cast
 
@@ -25,13 +25,16 @@ from .typing import Parameters, Weights
 
 def weights_to_parameters(weights: Weights) -> Parameters:
     """Convert NumPy weights to parameters object."""
-    tensors = str([ndarray_to_bytes(ndarray) for ndarray in weights])
-    return Parameters(tensors=tensors, tensor_type="numpy.ndarray")
+    tensors = pickle.dumps([ndarray_to_bytes(ndarray) for ndarray in weights])
+    compressed_tensors = gzip.compress(tensors)
+    return Parameters(tensors=compressed_tensors, tensor_type="numpy.ndarray")
 
 
 def parameters_to_weights(parameters: Parameters) -> Weights:
     """Convert parameters object to NumPy weights."""
-    return [bytes_to_ndarray(tensor) for tensor in parameters.tensors]
+    decompressed_tensors = gzip.decompress(parameters.tensors)
+    tensors = pickle.loads(decompressed_tensors)
+    return [bytes_to_ndarray(tensor) for tensor in tensors]
 
 
 def ndarray_to_bytes(ndarray: np.ndarray) -> bytes:
