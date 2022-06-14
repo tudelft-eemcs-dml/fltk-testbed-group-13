@@ -1,4 +1,5 @@
 absl-py==1.0.0
+blosc
 cachetools==5.1.0
 certifi==2022.5.18.1
 charset-normalizer==2.0.12
