@@ -24,4 +24,5 @@ ADD FedKNOW/dataset /app/FedKNOW/dataset
 ADD FedKNOW/models /app/FedKNOW/models
 ADD FedKNOW/test.py /app/FedKNOW
 
+
 ENTRYPOINT ["python3","-m","FedKNOW.multi.main_WEIT"]

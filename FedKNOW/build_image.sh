@@ -6,4 +6,4 @@ else
     BUILDKIT=0
 fi
 
-DOCKER_BUILDKIT=${BUILDKIT} docker build -t flower_client:latest . -f FedKNOW/docker/Dockerfile
+DOCKER_BUILDKIT=${BUILDKIT} docker build -t gcr.io/sdml-349720/flower-client-lzma:latest . -f FedKNOW/docker/Dockerfile
