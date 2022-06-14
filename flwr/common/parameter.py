@@ -39,7 +39,7 @@ def ndarray_to_bytes(ndarray: np.ndarray) -> bytes:
     """Serialize NumPy ndarray to bytes."""
     bytes_io = BytesIO()
     np.save(bytes_io, ndarray, allow_pickle=False)
-    compressed = zstd.compress(bytes_io.getvalue(), format=lzma.FORMAT_RAW)
+    compressed = zstd.compress(bytes_io.getvalue())
     return compressed
 
 
