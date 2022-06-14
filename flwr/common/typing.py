@@ -35,7 +35,7 @@ Metrics = Dict[str, Scalar]
 class Parameters:
     """Model parameters."""
 
-    tensors: str
+    tensors: bytes
     tensor_type: str
 
 
