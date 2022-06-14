@@ -10,7 +10,7 @@ import time
 import sys
 import pandas as pd
 import csv
-import lzma
+import zstd
 
 from flwr.common import (
     EvaluateIns,
@@ -89,7 +89,7 @@ class OurFed(fl.server.strategy.FedAvg):
                     internal.append(self.kb[client][tensor])
                 kb_converted.append(np.stack(internal,axis=-1))
             kb_converted_string = pickle.dumps(kb_converted)
-            kb_converted_string = lzma.compress(kb_converted_string)
+            kb_converted_string = zstd.compress(kb_converted_string)
             self.kb = []
         config['kb'] = kb_converted_string
 
@@ -174,7 +174,7 @@ class OurFed(fl.server.strategy.FedAvg):
         num_clients = 0
         for _,fitres in results:
             if (fitres.metrics['kb'] != ""):
-                kb.append(pickle.loads(lzma.decompress(fitres.metrics['kb'])))
+                kb.append(pickle.loads(zstd.decompress(fitres.metrics['kb'])))
             avg_client_parameter_size += fitres.metrics['parameter_size']
             avg_client_config_size += fitres.metrics['kb_size']
             avg_client_exec_time += fitres.metrics['clientExecTime']

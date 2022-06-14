@@ -18,7 +18,7 @@
 from io import BytesIO
 from typing import cast
 
-import lzma
+import zstd
 import numpy as np
 
 from .typing import Parameters, Weights
@@ -39,13 +39,13 @@ def ndarray_to_bytes(ndarray: np.ndarray) -> bytes:
     """Serialize NumPy ndarray to bytes."""
     bytes_io = BytesIO()
     np.save(bytes_io, ndarray, allow_pickle=False)
-    compressed = lzma.compress(bytes_io.getvalue())
+    compressed = zstd.compress(bytes_io.getvalue(), format=lzma.FORMAT_RAW)
     return compressed
 
 
 def bytes_to_ndarray(tensor: bytes) -> np.ndarray:
     """Deserialize NumPy ndarray from bytes."""
-    decompressed = lzma.decompress(tensor)
+    decompressed = zstd.decompress(tensor)
     bytes_io = BytesIO(decompressed)
     ndarray_deserialized = np.load(bytes_io, allow_pickle=False)
     return cast(np.ndarray, ndarray_deserialized)

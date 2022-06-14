@@ -25,7 +25,7 @@ from collections import OrderedDict
 import datetime
 import time
 import sys
-import lzma
+import zstd
 
 from_kb = []
 
@@ -54,7 +54,7 @@ class FPKDClient(fl.client.NumPyClient):
         global from_kb
         train_round = config['round']
         if(config['kb'] != ""):
-            from_kb = list(map(lambda x: torch.from_numpy(x), pickle.loads(lzma.decompress(config['kb']))))
+            from_kb = list(map(lambda x: torch.from_numpy(x), pickle.loads(zstd.decompress(config['kb']))))
         begintime = datetime.datetime.now()
         print('cur round{} begin training ,time is {}'.format(train_round,time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())))
         self.set_parameters(parameters)
@@ -67,7 +67,7 @@ class FPKDClient(fl.client.NumPyClient):
                 from_kb_l.append(aw.cpu().detach().numpy())
                 #shape = np.concatenate([aw.shape, [int(round(args.num_users * args.frac))]], axis=0)
             kb_str = pickle.dumps(from_kb_l)
-            kb_str = lzma.compress(kb_str)
+            kb_str = zstd.compress(kb_str)
                 #from_kb_l = np.zeros(shape)
                 #if len(shape) == 5:
                     #from_kb_l[:, :, :, :, ind] = aw.cpu().detach().numpy()
