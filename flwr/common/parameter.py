@@ -18,7 +18,6 @@
 from io import BytesIO
 from typing import cast
 
-import blosc
 import numpy as np
 
 from .typing import Parameters, Weights

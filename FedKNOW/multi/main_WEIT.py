@@ -75,12 +75,13 @@ class FPKDClient(fl.client.NumPyClient):
                 #from_kb_l = torch.from_numpy(from_kb_l)
                 #from_kb.append(from_kb_l)
         params = self.get_parameters()
+        params_copy = weights_to_parameters(params)
         #new_params = parameters_to_weights(params)
         endtime =time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
         print('cur round {} end training ,time is {}'.format(train_round, endtime))
         end = time.time()
         clientExecTime = end - start
-        paramSize = sum([x.nbytes for x in params])
+        paramSize = sum([len(x) for x in params_copy.tensors])
         kbSize = sys.getsizeof(kb_str)
         return params, indd, {'kb':kb_str,'clientExecTime':clientExecTime, 'parameter_size':paramSize, 'kb_size':kbSize, 'train_acc': acc}
         #return self.get_parameters(), indd, {}
