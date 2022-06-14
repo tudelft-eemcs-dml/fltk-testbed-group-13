@@ -22,7 +22,7 @@ service FlowerService {
 }
 
 message Parameters {
-  string tensors = 1;
+  bytes tensors = 1;
   string tensor_type = 2;
 }
 enum Reason {
