@@ -1,6 +1,6 @@
 import copy
 
-import blosc
+import gzip
 import numpy as np
 import torch
 from FedKNOW.utils.options import args_parser
@@ -55,7 +55,7 @@ class FPKDClient(fl.client.NumPyClient):
         global from_kb
         train_round = config['round']
         if(config['kb'] != ""):
-            from_kb = list(map(lambda x: torch.from_numpy(x), pickle.loads(blosc.decompress(config['kb']))))
+            from_kb = list(map(lambda x: torch.from_numpy(x), pickle.loads(gzip.decompress(config['kb']))))
         begintime = datetime.datetime.now()
         print('cur round{} begin training ,time is {}'.format(train_round,time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())))
         self.set_parameters(parameters)
@@ -67,7 +67,7 @@ class FPKDClient(fl.client.NumPyClient):
             for aw in aws:
                 from_kb_l.append(aw.cpu().detach().numpy())
                 #shape = np.concatenate([aw.shape, [int(round(args.num_users * args.frac))]], axis=0)
-            kb_str = blosc.compress(pickle.dumps(from_kb_l))
+            kb_str = gzip.compress(pickle.dumps(from_kb_l))
                 #from_kb_l = np.zeros(shape)
                 #if len(shape) == 5:
                     #from_kb_l[:, :, :, :, ind] = aw.cpu().detach().numpy()

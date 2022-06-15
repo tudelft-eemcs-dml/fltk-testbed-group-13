@@ -13,7 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 """Parameter conversion."""
-import blosc
+import gzip
 import pickle
 from io import BytesIO
 from typing import cast
@@ -26,13 +26,13 @@ from .typing import Parameters, Weights
 def weights_to_parameters(weights: Weights) -> Parameters:
     """Convert NumPy weights to parameters object."""
     tensors = pickle.dumps(weights)
-    compressed_tensors = blosc.compress(tensors)
+    compressed_tensors = gzip.compress(tensors)
     return Parameters(tensors=compressed_tensors, tensor_type="numpy.ndarray")
 
 
 def parameters_to_weights(parameters: Parameters) -> Weights:
     """Convert parameters object to NumPy weights."""
-    decompressed_tensors = blosc.decompress(parameters.tensors)
+    decompressed_tensors = gzip.decompress(parameters.tensors)
     weights = pickle.loads(decompressed_tensors)
     return weights
 
