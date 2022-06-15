@@ -1,4 +1,5 @@
 import copy
+import blosc
 import numpy as np
 import torch
 from FedKNOW.utils.options import args_parser
@@ -23,6 +24,9 @@ from flwr.common import (
 )
 from collections import OrderedDict
 import datetime
+import time
+import sys
+import gzip
 
 from_kb = []
 
@@ -47,14 +51,15 @@ class FPKDClient(fl.client.NumPyClient):
         # net.load_state_dict(state_dict, strict=True)
 
     def fit(self, parameters, config):
+        start = time.time()
         global from_kb
         train_round = config['round']
         if(config['kb'] != ""):
-            from_kb = pickle.loads(config['kb'])
+            from_kb = list(map(lambda x: torch.from_numpy(x), pickle.loads(gzip.decompress(config['kb']))))
         begintime = datetime.datetime.now()
         print('cur round{} begin training ,time is {}'.format(train_round,time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())))
         self.set_parameters(parameters)
-        w_local, aws,loss, indd = LongLifeTrain(self.args,appr,train_round-1,from_kb,args.client_id)
+        w_local, aws,loss, indd, acc = LongLifeTrain(self.args,appr,train_round-1,from_kb,args.client_id)
         kb_str = ""
         if (train_round-1) % args.round == args.round -1:
             from_kb_l = []
@@ -63,6 +68,7 @@ class FPKDClient(fl.client.NumPyClient):
                 from_kb_l.append(aw.cpu().detach().numpy())
                 #shape = np.concatenate([aw.shape, [int(round(args.num_users * args.frac))]], axis=0)
             kb_str = pickle.dumps(from_kb_l)
+            kb_str = gzip.compress(kb_str)
                 #from_kb_l = np.zeros(shape)
                 #if len(shape) == 5:
                     #from_kb_l[:, :, :, :, ind] = aw.cpu().detach().numpy()
@@ -70,11 +76,16 @@ class FPKDClient(fl.client.NumPyClient):
                     #from_kb_l[:, :, ind] = aw.cpu().detach().numpy()
                 #from_kb_l = torch.from_numpy(from_kb_l)
                 #from_kb.append(from_kb_l)
-        params = self.get_parameters()
+        params = self.get_parameters() #No need to compress this is automatically done
+        params_copy = weights_to_parameters(params) #to compress it using gzip
         #new_params = parameters_to_weights(params)
         endtime =time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
         print('cur round {} end training ,time is {}'.format(train_round, endtime))
-        return params, indd, {'kb':kb_str}
+        end = time.time()
+        clientExecTime = end - start
+        paramSize = sum([len(x) for x in params_copy.tensors])
+        kbSize = sys.getsizeof(kb_str)
+        return params, indd, {'kb':kb_str,'clientExecTime':clientExecTime, 'parameter_size':paramSize, 'kb_size':kbSize, 'train_acc': acc}
         #return self.get_parameters(), indd, {}
 
     def evaluate(self, parameters, config):
@@ -84,7 +95,7 @@ class FPKDClient(fl.client.NumPyClient):
         self.set_parameters(parameters)
         loss, accuracy,totalnum = LongLifeTest(args, appr, test_round-1)
         print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
-        return float(accuracy), totalnum, {"accuracy": float(accuracy)}
+        return float(loss), totalnum, {"accuracy": float(accuracy)}
 
 
 if __name__ == '__main__':

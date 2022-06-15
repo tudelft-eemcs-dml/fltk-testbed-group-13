@@ -366,12 +366,12 @@ def LongLifeTrain(args, appr, aggNum, from_kbs,idx):
     task = t
 
     # Train
-    sws,loss,_,len_data = appr.train(task,from_kbs,know)
+    sws,loss,acc,len_data = appr.train(task,from_kbs,know)
     print('-' * 100)
     if know:
-        return sws,appr.pre_weight['aw'][-1],loss,len_data
+        return sws,appr.pre_weight['aw'][-1],loss,len_data, acc
     else:
-        return sws, None, loss, len_data
+        return sws, None, loss, len_data, acc
 
 def LongLifeTest(args, appr, aggNum):
     t = aggNum // args.round

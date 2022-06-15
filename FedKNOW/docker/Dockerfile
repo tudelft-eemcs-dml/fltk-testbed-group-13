@@ -12,16 +12,16 @@ WORKDIR /app
 # update pip
 RUN pip3 install --upgrade pip
 
-ADD docker/requirements.txt requirements.txt
+ADD FedKNOW/docker/requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
 # Scripts needed for Flower client
-ADD multi /app/FedKNOW/multi
-ADD utils /app/FedKNOW/utils
-ADD scripts /app/FedKNOW/scripts
-ADD data /app/FedKNOW/data
-ADD dataset /app/FedKNOW/dataset
-ADD models /app/FedKNOW/models
-ADD test.py /app/FedKNOW
-
+ADD flwr /app/flwr
+ADD FedKNOW/multi /app/FedKNOW/multi
+ADD FedKNOW/utils /app/FedKNOW/utils
+ADD FedKNOW/scripts /app/FedKNOW/scripts
+ADD FedKNOW/data /app/FedKNOW/data
+ADD FedKNOW/dataset /app/FedKNOW/dataset
+ADD FedKNOW/models /app/FedKNOW/models
+ADD FedKNOW/test.py /app/FedKNOW
 
 ENTRYPOINT ["python3","-m","FedKNOW.multi.main_WEIT"]
